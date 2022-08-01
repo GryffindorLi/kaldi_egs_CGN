@@ -54,7 +54,7 @@ rm -f temp.flist
 # create utt2spk, spk2utt, txt, segments, scp, spk2gender
 for x in train_t train_s dev_t dev_s; do
 	$local/process_flist.pl $cgn $x
-	recode -d h..u8 $x.txt					# CGN is not in utf-8 by default
+	#recode -d h..u8 $x.txt					# CGN is not in utf-8 by default
 	cat $x.utt2spk | $utils/utt2spk_to_spk2utt.pl > $x.spk2utt || exit 1;
 done
 
@@ -62,9 +62,12 @@ done
 ## If you have a lexicon prepared, you can simply place it in $dictdir and it will be used instead of the default CGN one
 if [ ! -f $dictdir/lexicon.txt ]; then
 	mkdir -p $dictdir
-	[ -e $cgn/data/lexicon/xml/cgnlex.lex ] && cat $cgn/data/lexicon/xml/cgnlex.lex | recode -d h..u8 | perl -CSD $local/format_lexicon.pl $lang | sort >$dictdir/lexicon.txt
-	[ -e $cgn/data/lexicon/xml/cgnlex_2.0.lex ] && cat $cgn/data/lexicon/xml/cgnlex_2.0.lex | recode -d h..u8 | perl -CSD $local/format_lexicon.pl $lang | sort >$dictdir/lexicon.txt
-	## uncomment lines below to convert to UTwente phonetic lexicon	
+	#[ -e $cgn/data/lexicon/xml/cgnlex.lex ] && cat $cgn/data/lexicon/xml/cgnlex.lex | recode -d h..u8 | perl -CSD $local/format_lexicon.pl $lang | sort >$dictdir/lexicon.txt
+	[ -e $cgn/data/lexicon/xml/cgnlex.lex ] && cat $cgn/data/lexicon/xml/cgnlex.lex | perl -CSD $local/format_lexicon.pl $lang | sort >$dictdir/lexicon.txt
+	#[ -e $cgn/data/lexicon/xml/cgnlex_2.0.lex ] && cat $cgn/data/lexicon/xml/cgnlex_2.0.lex | recode -d h..u8 | perl -CSD $local/format_lexicon.pl $lang | sort >$dictdir/lexicon.txt
+	[ -e $cgn/data/lexicon/xml/cgnlex_2.0.lex ] && cat $cgn/data/lexicon/xml/cgnlex_2.0.lex | perl -CSD $local/format_lexicon.pl $lang | sort >$dictdir/lexicon.txt
+
+# uncomment lines below to convert to UTwente phonetic lexicon	
 	# cp $dictdir/lexicon.txt $dictdir/lexicon.orig.txt	
 	# cat $dictdir/lexicon.orig.txt | perl $local/cgn2nbest_phon.pl >$dictdir/lexicon.txt
 fi

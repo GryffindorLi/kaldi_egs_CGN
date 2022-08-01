@@ -8,7 +8,8 @@
 #  flist2scp <flist> <skpfile-directory> <speakerinfo> <utt2spk-file> <spk2gender-file> <txt-file> <segments-file>
 #
 
-use PerlIO::gzip;
+#use PerlIO::gzip;
+use IO::Compress::Gzip;
 
 #
 # For each line in the flist, read the corresponding spk file.
