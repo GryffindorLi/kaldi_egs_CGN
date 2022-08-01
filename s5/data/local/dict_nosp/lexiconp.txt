@@ -1,3 +1,0 @@
-<unk>	1.0	[SPN]
-ggg	1.0	[SPN]
-xxx	1.0	[SPN]

@@ -1,4 +1,0 @@
-<unk> [SPN]_S
-ggg [SPN]_S
-xxx [SPN]_S
-<eps> SIL
