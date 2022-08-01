@@ -27,7 +27,8 @@ decode=true	# set to false to disable the decoding-related scripts.
           	
 . utils/parse_options.sh  # e.g. this parses the --stage option if supplied.
 
-cgn=/home/laurensw/Data/CGN			# point this to CGN
+#cgn=/home/laurensw/Data/CGN			# point this to CGN
+cgn=/tudelft.net/staff-bulk/ewi/insy/SpeechLab/CGN/CGN_2.0.3
 lang="nl"
 comp="a;b;c;d;f;g;h;i;j;k;l;m;n;o"
 nj=30;

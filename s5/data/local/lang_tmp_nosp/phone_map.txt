@@ -1,0 +1,2 @@
+SIL SIL SIL_B SIL_E SIL_I SIL_S 
+[SPN] [SPN]_B [SPN]_E [SPN]_I [SPN]_S 

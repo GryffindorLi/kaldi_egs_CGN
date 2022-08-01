@@ -1,0 +1,4 @@
+<eps> <eps> SIL
+<unk> <unk> [SPN]_S
+ggg ggg [SPN]_S
+xxx xxx [SPN]_S

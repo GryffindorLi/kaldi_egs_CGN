@@ -1,0 +1,9 @@
+SIL nonword
+SIL_B begin
+SIL_E end
+SIL_I internal
+SIL_S singleton
+[SPN]_B begin
+[SPN]_E end
+[SPN]_I internal
+[SPN]_S singleton
