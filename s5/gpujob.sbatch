@@ -7,20 +7,20 @@
 #SBATCH --partition=general
 
 # The default Quality of Service is the 'short' QoS (maximum run time: 4 hours)
-#SBATCH --qos=short
+#SBATCH --qos=long
 
 # The default run (wall-clock) time is 1 minute
-#SBATCH --time=2:00:00
+#SBATCH --time=48:00:00
 
 # The default number of parallel tasks per job is 1
 #SBATCH --ntasks=1
 
 # The default number of CPUs per task is 1 (note: CPUs are always allocated to jobs per 2)
 # Request 1 CPU per active thread of your program (assume 1 unless you specifically set this)
-#SBATCH --cpus-per-task=30
+#SBATCH --cpus-per-task=20
 
 # The default memory per node is 1024 megabytes (1GB) (for multiple tasks, specify --mem-per-cpu instead)
-#SBATCH --mem=10240
+#SBATCH --mem=40G
 
 # Request a GPU
 #SBATCH --gres=gpu:1
@@ -30,7 +30,7 @@
 #SBATCH --mail-type=END
 
 # Measure GPU usage of your job (initialization)
-previous=$(/usr/bin/nvidia-smi --query-accounted-apps='gpu_utilization,mem_utilization,max_memory_usage,time' --format='csv' | /usr/bin/tail -n '+2')
+#previous=$(/usr/bin/nvidia-smi --query-accounted-apps='gpu_utilization,mem_utilization,max_memory_usage,time' --format='csv' | /usr/bin/tail -n '+2')
 
 # Use this simple command to check that your sbatch settings are working (it should show the GPU that you requested)
 #/usr/bin/nvidia-smi
@@ -47,4 +47,4 @@ srun sh ./run.sh
 # Your job commands go above here
 
 # Measure GPU usage of your job (result)
-/usr/bin/nvidia-smi --query-accounted-apps='gpu_utilization,mem_utilization,max_memory_usage,time' --format='csv' | /usr/bin/grep -v -F "$previous"
+#/usr/bin/nvidia-smi --query-accounted-apps='gpu_utilization,mem_utilization,max_memory_usage,time' --format='csv' | /usr/bin/grep -v -F "$previous"

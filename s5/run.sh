@@ -248,13 +248,13 @@ fi
 
  if [ $stage -le 9 ]; then
    # Do one more pass of sat training.
-#   if $train; then
-#     # use studio models for this alignment pass
-#     steps/align_fmllr.sh --nj $nj --cmd "$train_cmd" \
-#       data/train data/lang_s exp/train_s/tri3 exp/train/tri3_ali
-#     steps/train_sat.sh  --cmd "$train_cmd" 5000 80000 \
-#       data/train data/lang_s exp/train/tri3_ali exp/train/tri4 || exit 1;
-#   fi
+   if $train; then
+     # use studio models for this alignment pass
+     steps/align_fmllr.sh --nj $nj --cmd "$train_cmd" \
+       data/train data/lang_s exp/train_s/tri3 exp/train/tri3_ali
+     steps/train_sat.sh  --cmd "$train_cmd" 5000 80000 \
+       data/train data/lang_s exp/train/tri3_ali exp/train/tri4 || exit 1;
+   fi
 
     if $decode; then
       utils/mkgraph.sh data/lang_s_test_tgpr exp/train/tri4 exp/train/tri4/graph_tgpr || exit 1;
