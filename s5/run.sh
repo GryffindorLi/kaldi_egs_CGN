@@ -13,7 +13,7 @@
 # using more material for the language model and by extending your lexicon.
 #
 
-stage=0
+stage=0 # note that stage 7 is incomplete due to code bug in tri3_cleaned_work
 train=true	# set to false to disable the training-related scripts
 				# note: you probably only want to set --train false if you
 				# are using at least --stage 1.
@@ -22,17 +22,19 @@ decode=true	# set to false to disable the decoding-related scripts.
 . ./cmd.sh	## You'll want to change cmd.sh to something that will work on your system.
            	## This relates to the queue.
  
+nj=20;
+decode_nj=20;
 [ ! -e steps ] && ln -s ../../wsj/s5/steps steps
 [ ! -e utils ] && ln -s ../../wsj/s5/utils utils
           	
 . utils/parse_options.sh  # e.g. this parses the --stage option if supplied.
 
 #cgn=/home/laurensw/Data/CGN			# point this to CGN
-cgn=/tudelft.net/staff-bulk/ewi/insy/SpeechLab/CGN/CGN_2.0.3
+cgn=/tudelft.net/staff-bulk/ewi/insy/SpeechLab/CGN/CGN_2.0.3			# point this to CGN
 lang="nl"
 comp="a;b;c;d;f;g;h;i;j;k;l;m;n;o"
-nj=30;
-decode_nj=10;
+#nj=40;
+#decode_nj=20;
 
 if [ $stage -le 0 ]; then
   # data preparation.
@@ -125,7 +127,7 @@ if [ $stage -le 3 ]; then
   # tri2
   if $train; then
     for x in train_s train_t; do
-      steps/align_si.sh --nj 10 --cmd "$train_cmd" \
+      steps/align_si.sh --nj $nj --cmd "$train_cmd" \
         data/$x data/lang_nosp exp/$x/tri1 exp/$x/tri1_ali || exit 1;
 
       steps/train_lda_mllt.sh --cmd "$train_cmd" \
@@ -213,62 +215,66 @@ if [ $stage -le 5 ]; then
   fi
 fi
 
-# It is time to clean up our data a bit
-# this takes quite a while.. and is actually only really helpful for the NNet models,
-# so if you're not going to make those, you may as well stop here.
+# # It is time to clean up our data a bit
+# # this takes quite a while.. and is actually only really helpful for the NNet models,
+# # so if you're not going to make those, you may as well stop here.
 
-if [ $stage -le 7 ]; then  
-  for x in s t; do
-    steps/cleanup/clean_and_segment_data.sh --nj $nj --cmd "$train_cmd" --segmentation-opts "--min-segment-length 0.3 --min-new-segment-length 0.6" \
-      data/train_${x} data/lang_${x} exp/train_${x}/tri3 exp/train_${x}/tri3_cleaned_work data/train_${x}_cleaned
-  done
+ if [ $stage -le 7 ]; then  
+   for x in s ; do
+     steps/cleanup/clean_and_segment_data.sh --nj $nj --cmd "$train_cmd" --segmentation-opts "--min-segment-length 0.3 --min-new-segment-length 0.6" \
+       data/train_${x} data/lang_${x} exp/train_${x}/tri3 exp/train_${x}/tri3_cleaned_work data/train_${x}_cleaned
+   done
+ fi
+
+ if [ $stage -le 8 ]; then
+   # Now we're going to recombine our telephone and studio speech to one data dir, and make sure we have alignments for them
+   # The telephone speech will be 8khz, so we need to upsample & get new features
+   for x in train_t dev_t; do
+     utils/copy_data_dir.sh data/$x data/${x}_16khz
+     rm data/${x}_16khz/feats.scp
+     cat data/$x/wav.scp | sed 's/wav -b 16/wav -r 16k -b 16/' >data/${x}_16khz/wav.scp
+     steps/make_mfcc.sh --cmd "$train_cmd" --nj $nj --mfcc-config conf/mfcc.conf data/${x}_16khz || exit 1;
+     steps/compute_cmvn_stats.sh data/${x}_16khz || exit 1;
+   done
+   cp data/dev_t/text_ref data/dev_t_16khz/
+   if [ -d data/train_s ] && [ -d data/train_t_16khz ]; then
+     utils/combine_data.sh data/train data/train_s data/train_t_16khz
+   elif [ -d data/train_s ]; then
+     utils/copy_data_dir.sh data/train_s data/train
+   elif [ -d data/train_t_16khz ]; then
+     utils/copy_data_dir.sh data/train_t_16khz data/train
+   fi
+ fi
+
+ if [ $stage -le 9 ]; then
+   # Do one more pass of sat training.
+#   if $train; then
+#     # use studio models for this alignment pass
+#     steps/align_fmllr.sh --nj $nj --cmd "$train_cmd" \
+#       data/train data/lang_s exp/train_s/tri3 exp/train/tri3_ali
+#     steps/train_sat.sh  --cmd "$train_cmd" 5000 80000 \
+#       data/train data/lang_s exp/train/tri3_ali exp/train/tri4 || exit 1;
+#   fi
+
+    if $decode; then
+      utils/mkgraph.sh data/lang_s_test_tgpr exp/train/tri4 exp/train/tri4/graph_tgpr || exit 1;
+      for x in dev_s dev_t_16khz; do
+        nspk=$(wc -l <data/$x/spk2utt)
+        [ "$nspk" -gt "$decode_nj" ] && nspk=$decode_nj
+        steps/decode_fmllr.sh --nj $nspk --cmd "$decode_cmd" \
+          exp/train/tri4/graph_tgpr data/$x \
+          exp/train/tri4/decode_${x}_tgpr || exit 1;
+        steps/lmrescore_const_arpa.sh \
+          --cmd "$decode_cmd" data/lang_s_test_{tgpr,fgconst} \
+          data/$x exp/train/tri4/decode_${x}_tgpr{,_fg} || exit 1;
+      done
+    fi
+ fi
+if [ $stage -le 10 ]; then
+  steps/align_fmllr.sh --nj $nj --cmd "$train_cmd" \
+    data/train data/lang_s exp/train/tri4 exp/train/tri4_ali || exit 1 
 fi
-
-if [ $stage -le 8 ]; then
-  # Now we're going to recombine our telephone and studio speech to one data dir, and make sure we have alignments for them
-  # The telephone speech will be 8khz, so we need to upsample & get new features
-  for x in train_t_cleaned dev_t; do
-    utils/copy_data_dir.sh data/$x data/${x}_16khz
-    rm data/${x}_16khz/feats.scp
-    cat data/$x/wav.scp | sed 's/wav -b 16/wav -r 16k -b 16/' >data/${x}_16khz/wav.scp
-    steps/make_mfcc.sh --cmd "$train_cmd" --nj $nj --mfcc-config conf/mfcc.conf data/${x}_16khz || exit 1;
-    steps/compute_cmvn_stats.sh data/${x}_16khz || exit 1;
-  done
-  cp data/dev_t/text_ref data/dev_t_16khz/
-  if [ -d data/train_s_cleaned ] && [ -d data/train_t_cleaned_16khz ]; then
-    utils/combine_data.sh data/train_cleaned data/train_s_cleaned data/train_t_cleaned_16khz
-  elif [ -d data/train_s_cleaned ]; then
-    utils/copy_data_dir.sh data/train_s_cleaned data/train_cleaned
-  elif [ -d data/train_t_cleaned_16khz ]; then
-    utils/copy_data_dir.sh data/train_t_cleaned_16khz data/train_cleaned
-  fi
-fi
-
-if [ $stage -le 9 ]; then
-  # Do one more pass of sat training.
-  if $train; then
-    # use studio models for this alignment pass
-    steps/align_fmllr.sh --nj $nj --cmd "$train_cmd" \
-      data/train_cleaned data/lang_s exp/train_s/tri3 exp/train_cleaned/tri3_ali_cleaned
-    steps/train_sat.sh --cmd "$train_cmd" 5000 80000 \
-      data/train_cleaned data/lang_s exp/train_cleaned/tri3_ali_cleaned exp/train_cleaned/tri4 || exit 1;
-  fi
-
-  if $decode; then
-    utils/mkgraph.sh data/lang_s_test_tgpr exp/train_cleaned/tri4 exp/train_cleaned/tri4/graph_tgpr || exit 1;
-    for x in dev_s dev_t_16khz; do
-      nspk=$(wc -l <data/$x/spk2utt)
-      [ "$nspk" -gt "$decode_nj" ] && nspk=$decode_nj
-      steps/decode_fmllr.sh --nj $nspk --cmd "$decode_cmd" \
-        exp/train_cleaned/tri4/graph_tgpr data/$x \
-        exp/train_cleaned/tri4/decode_${x}_tgpr || exit 1;
-      steps/lmrescore_const_arpa.sh \
-        --cmd "$decode_cmd" data/lang_s_test_{tgpr,fgconst} \
-        data/$x exp/train_cleaned/tri4/decode_${x}_tgpr{,_fg} || exit 1;
-    done
-  fi
-fi
-
-# To train nnet models, please run local/chain/run_tdnn.sh
-
-exit 0;
+ # To train nnet models, please run local/chain/run_tdnn.sh
+ 
+# exit 0;
+echo "succeeded"
