@@ -22,11 +22,9 @@ stage=18
 align_fmllr_lats_stage=-10
 nj=1
 decode_nj=1
-num_threads_decode=1
 min_seg_len=1.55
-xent_regularize=0.025
+xent_regularize=0.1
 train_set=train
-get_egs_stage=-10
 gmm=tri4  # the gmm for the target data
 num_threads_ubm=32
 nnet3_affix=  # cleanup affix for nnet3 and chain dirs, e.g. _cleaned
@@ -35,19 +33,9 @@ nnet3_affix=  # cleanup affix for nnet3 and chain dirs, e.g. _cleaned
 # are just hardcoded at this level, in the commands below.
 train_stage=-10
 tree_affix=  # affix for tree directory, e.g. "a" or "b", in case we change the configuration.
-tdnn_lstm_affix=1a  #affix for TDNN directory, e.g. "a" or "b", in case we change the configuration.
-common_egs_dir=/tudelft.net/staff-bulk/ewi/insy/SpeechLab/siyuanfeng/software/kaldi/egs/cgn/s5/exp/chain/tdnn_lstm1a_sp_bi_epoch3_ld5/egs  # you can set this to use previously dumped egs.
+tdnn_affix=1a  #affix for TDNN directory, e.g. "a" or "b", in case we change the configuration.
+common_egs_dir=/tudelft.net/staff-bulk/ewi/insy/SpeechLab/siyuanfeng/software/kaldi/egs/cgn/s5/exp/chain/tdnn1a_sp_bi/egs  # you can set this to use previously dumped egs.
 
-chunk_width=150
-chunk_left_context=40
-chunk_right_context=0
-self_repair_scale=0.00001
-label_delay=5
-dropout_schedule='0,0@0.20,0.3@0.50,0'
-# decode options
-extra_left_context=50
-extra_right_context=0
-frames_per_chunk=150
 
 # some settings dependent on the GPU, for a single GTX980Ti these settings seem to work ok.
 #
@@ -57,7 +45,7 @@ num_jobs_final=1
 num_epochs=3
 # change these for different amounts of memory
 #num_chunks_per_minibatch="256,128,64"
-num_chunks_per_minibatch="256,128,64"
+num_chunks_per_minibatch="128,64"
 frames_per_iter=1500000
 # resulting in around 2500 iters
 # End configuration section.
@@ -89,10 +77,8 @@ gmm_dir=exp/$train_set/$gmm
 ali_dir=exp/$train_set/${gmm}_ali_${train_set}_sp_comb
 tree_dir=exp/chain${nnet3_affix}/tree_bi${tree_affix}
 lat_dir=exp/chain${nnet3_affix}/${gmm}_${train_set}_sp_comb_lats
-#dir=exp/chain${nnet3_affix}/tdnn${tdnn_lstm_affix}_sp_bi
-dir=exp/chain${nnet3_affix}/tdnn_lstm${tdnn_lstm_affix}_sp_bi_epoch${num_epochs}
-if [ $label_delay -gt 0 ]; then dir=${dir}_ld${label_delay}; fi
-
+#dir=exp/chain${nnet3_affix}/tdnn${tdnn_affix}_sp_bi
+dir=exp/chain${nnet3_affix}/tdnn${tdnn_affix}_sp_bi_epoch${num_epochs}
 train_data_dir=data/${train_set}_sp_hires_comb
 lores_train_data_dir=data/${train_set}_sp_comb
 train_ivector_dir=exp/nnet3${nnet3_affix}/ivectors_${train_set}_sp_hires_comb
@@ -164,24 +150,19 @@ if [ $stage -le 17 ]; then
   # please note that it is important to have input layer with the name=input
   # as the layer immediately preceding the fixed-affine-layer to enable
   # the use of short notation for the descriptor
-  fixed-affine-layer name=lda input=Append(-2,-1,0,1,2,ReplaceIndex(ivector, t, 0)) affine-transform-file=$dir/configs/lda.mat
+  fixed-affine-layer name=lda input=Append(-1,0,1,ReplaceIndex(ivector, t, 0)) affine-transform-file=$dir/configs/lda.mat
 
   # the first splicing is moved before the lda layer, so no splicing here
-  relu-renorm-layer name=tdnn1 dim=1024
-  relu-renorm-layer name=tdnn2 input=Append(-1,0,1) dim=1024
-  relu-renorm-layer name=tdnn3 input=Append(-1,0,1) dim=1024
-
-  # check steps/libs/nnet3/xconfig/lstm.py for the other options and defaults
-  lstmp-layer name=lstm1 cell-dim=1024 recurrent-projection-dim=256 non-recurrent-projection-dim=256 delay=-3 dropout-proportion=0.0 dropout-per-frame=true
-  relu-renorm-layer name=tdnn4 input=Append(-3,0,3) dim=1024
-  relu-renorm-layer name=tdnn5 input=Append(-3,0,3) dim=1024
-  lstmp-layer name=lstm2 cell-dim=1024 recurrent-projection-dim=256 non-recurrent-projection-dim=256 delay=-3 dropout-proportion=0.0 dropout-per-frame=true
-  relu-renorm-layer name=tdnn6 input=Append(-3,0,3) dim=1024
-  relu-renorm-layer name=tdnn7 input=Append(-3,0,3) dim=1024
-  lstmp-layer name=lstm3 cell-dim=1024 recurrent-projection-dim=256 non-recurrent-projection-dim=256 delay=-3 dropout-proportion=0.0 dropout-per-frame=true
+  relu-batchnorm-layer name=tdnn1 dim=450 self-repair-scale=1.0e-04
+  relu-batchnorm-layer name=tdnn2 input=Append(-1,0,1) dim=450
+  relu-batchnorm-layer name=tdnn3 input=Append(-1,0,1,2) dim=450
+  relu-batchnorm-layer name=tdnn4 input=Append(-3,0,3) dim=450
+  relu-batchnorm-layer name=tdnn5 input=Append(-3,0,3) dim=450
+  relu-batchnorm-layer name=tdnn6 input=Append(-6,-3,0) dim=450
 
   ## adding the layers for chain branch
-  output-layer name=output input=lstm3 output-delay=$label_delay include-log-softmax=false dim=$num_targets max-change=1.5
+  relu-batchnorm-layer name=prefinal-chain input=tdnn6 dim=450 target-rms=0.5
+  output-layer name=output include-log-softmax=false dim=$num_targets max-change=1.5
 
   # adding the layers for xent branch
   # This block prints the configs for a separate output that will be
@@ -192,7 +173,8 @@ if [ $stage -le 17 ]; then
   # final-layer learns at a rate independent of the regularization
   # constant; and the 0.5 was tuned so as to make the relative progress
   # similar in the xent and regular final layers.
-  output-layer name=output-xent input=lstm3 output-delay=$label_delay dim=$num_targets learning-rate-factor=$learning_rate_factor max-change=1.5
+  relu-batchnorm-layer name=prefinal-xent input=tdnn6 dim=450 target-rms=0.5
+  output-layer name=output-xent dim=$num_targets learning-rate-factor=$learning_rate_factor max-change=1.5
 
 EOF
   steps/nnet3/xconfig_to_configs.py --xconfig-file $dir/configs/network.xconfig --config-dir $dir/configs/
@@ -213,12 +195,8 @@ if [ $stage -le 18 ]; then
     --chain.apply-deriv-weights false \
     --chain.lm-opts="--num-extra-lm-states=2000" \
     --egs.dir "$common_egs_dir" \
-    --egs.stage $get_egs_stage \
     --egs.opts "--frames-overlap-per-eg 0" \
-    --egs.chunk-width $chunk_width \
-    --egs.chunk-left-context $chunk_left_context \
-    --egs.chunk-right-context $chunk_right_context \
-    --trainer.dropout-schedule $dropout_schedule \
+    --egs.chunk-width 150 \
     --trainer.num-chunk-per-minibatch $num_chunks_per_minibatch \
     --trainer.frames-per-iter $frames_per_iter \
     --trainer.num-epochs $num_epochs \
@@ -226,9 +204,6 @@ if [ $stage -le 18 ]; then
     --trainer.optimization.num-jobs-final $num_jobs_final \
     --trainer.optimization.initial-effective-lrate 0.001 \
     --trainer.optimization.final-effective-lrate 0.0001 \
-    --trainer.optimization.momentum 0.0 \
-    --trainer.optimization.shrink-value 0.99 \
-    --trainer.deriv-truncate-margin 8 \
     --trainer.max-param-change 2.0 \
     --cleanup.remove-egs $remove_egs \
     --feat-dir $train_data_dir \
@@ -250,13 +225,10 @@ fi
    for x in dev_s dev_t_16khz; do
      nspk=$(wc -l <data/$x/spk2utt)
      [ "$nspk" -gt "$decode_nj" ] && nspk=$decode_nj
-     steps/nnet3/decode.sh --num-threads $num_threads_decode --nj $nspk --cmd "$decode_cmd" \
+     steps/nnet3/decode.sh --nj $nspk --cmd "$decode_cmd" \
        --acwt 1.0 --post-decode-acwt 10.0 \
        --online-ivector-dir exp/nnet3${nnet3_affix}/ivectors_${x}_hires \
        --scoring-opts "--min-lmwt 5 " \
-       --extra-left-context $extra_left_context \
-       --extra-right-context $extra_right_context \
-       --frames-per-chunk $frames_per_chunk \
        $dir/graph data/${x}_hires $dir/decode_${x} || exit 1;
      steps/lmrescore_const_arpa.sh --cmd "$decode_cmd" data/lang_s_test_{tgpr,fgconst} \
        data/${x}_hires ${dir}/decode_${x} ${dir}/decode_${x}_rescore || exit

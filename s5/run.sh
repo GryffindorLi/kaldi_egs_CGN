@@ -13,7 +13,7 @@
 # using more material for the language model and by extending your lexicon.
 #
 
-stage=0 # note that stage 7 is incomplete due to code bug in tri3_cleaned_work
+stage=9# note that stage 7 is incomplete due to code bug in tri3_cleaned_work
 train=true	# set to false to disable the training-related scripts
 				# note: you probably only want to set --train false if you
 				# are using at least --stage 1.
@@ -275,6 +275,6 @@ if [ $stage -le 10 ]; then
     data/train data/lang_s exp/train/tri4 exp/train/tri4_ali || exit 1 
 fi
  # To train nnet models, please run local/chain/run_tdnn.sh
- 
+. local/chain/run_tdnn.sh 
 # exit 0;
 echo "succeeded"
