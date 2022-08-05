@@ -39,7 +39,7 @@ common_egs_dir=  # you can set this to use previously dumped egs.
 # End configuration section.
 echo "$0 $@"  # Print the command line for logging
 
-. cmd.sh
+. ./cmd.sh
 . ./path.sh
 . ./utils/parse_options.sh
 
@@ -179,56 +179,56 @@ num_chunks_per_minibatch="256,128,64"
 frames_per_iter=1500000
 # resulting in around 2500 iters
 
-#if [ $stage -le 18 ]; then
+if [ $stage -le 18 ]; then
 
-# steps/nnet3/chain/train.py --stage $train_stage \
-#    --cmd "$decode_cmd" \
-#    --feat.online-ivector-dir $train_ivector_dir \
-#    --feat.cmvn-opts "--norm-means=false --norm-vars=false" \
-#    --chain.xent-regularize 0.1 \
-#    --chain.leaky-hmm-coefficient 0.1 \
-#    --chain.l2-regularize 0.00005 \
-#    --chain.apply-deriv-weights false \
-#    --chain.lm-opts="--num-extra-lm-states=2000" \
-#    --egs.dir "$common_egs_dir" \
-#    --egs.opts "--frames-overlap-per-eg 0" \
-#    --egs.chunk-width 150 \
-#    --trainer.num-chunk-per-minibatch $num_chunks_per_minibatch \
-#    --trainer.frames-per-iter $frames_per_iter \
-#    --trainer.num-epochs $num_epochs \
-#    --trainer.optimization.num-jobs-initial $num_jobs_initial \
-#    --trainer.optimization.num-jobs-final $num_jobs_final \
-#    --trainer.optimization.initial-effective-lrate 0.001 \
-#    --trainer.optimization.final-effective-lrate 0.0001 \
-#    --trainer.max-param-change 2.0 \
-#    --cleanup.remove-egs true \
-#    --feat-dir $train_data_dir \
-#    --tree-dir $tree_dir \
-#    --lat-dir $lat_dir \
-#    --dir $dir
-#fi
+ steps/nnet3/chain/train.py --stage $train_stage \
+    --cmd "$decode_cmd" \
+    --feat.online-ivector-dir $train_ivector_dir \
+   --feat.cmvn-opts "--norm-means=false --norm-vars=false" \
+    --chain.xent-regularize 0.1 \
+    --chain.leaky-hmm-coefficient 0.1 \
+    --chain.l2-regularize 0.00005 \
+    --chain.apply-deriv-weights false \
+    --chain.lm-opts="--num-extra-lm-states=2000" \
+    --egs.dir "$common_egs_dir" \
+    --egs.opts "--frames-overlap-per-eg 0" \
+    --egs.chunk-width 150 \
+    --trainer.num-chunk-per-minibatch $num_chunks_per_minibatch \
+    --trainer.frames-per-iter $frames_per_iter \
+    --trainer.num-epochs $num_epochs \
+    --trainer.optimization.num-jobs-initial $num_jobs_initial \
+    --trainer.optimization.num-jobs-final $num_jobs_final \
+    --trainer.optimization.initial-effective-lrate 0.001 \
+    --trainer.optimization.final-effective-lrate 0.0001 \
+    --trainer.max-param-change 2.0 \
+    --cleanup.remove-egs true \
+    --feat-dir $train_data_dir \
+    --tree-dir $tree_dir \
+    --lat-dir $lat_dir \
+    --dir $dir
+fi
 
 
-#if [ $stage -le 19 ]; then
-#  # Note: it might appear that this data/lang_chain directory is mismatched, and it is as
-#  # far as the 'topo' is concerned, but this script doesn't read the 'topo' from
-#  # the lang directory.
-#  utils/mkgraph.sh --self-loop-scale 1.0 data/lang_s_test_tgpr $dir $dir/graph
-#fi
-#
-#if [ $stage -le 20 ]; then
-#  for x in dev_s dev_t_16khz; do
-#    nspk=$(wc -l <data/$x/spk2utt)
-#    [ "$nspk" -gt "$decode_nj" ] && nspk=$decode_nj
-#    steps/nnet3/decode.sh --nj $nspk --cmd "$decode_cmd" \
-#      --acwt 1.0 --post-decode-acwt 10.0 \
-#      --online-ivector-dir exp/nnet3${nnet3_affix}/ivectors_${x}_hires \
-#      --scoring-opts "--min-lmwt 5 " \
-#      $dir/graph data/${x}_hires $dir/decode_${x} || exit 1;
-#    steps/lmrescore_const_arpa.sh --cmd "$decode_cmd" data/lang_s_test_{tgpr,fgconst} \
-#      data/${x}_hires ${dir}/decode_${x} ${dir}/decode_${x}_rescore || exit
-#  done
-#fi
+if [ $stage -le 19 ]; then
+  # Note: it might appear that this data/lang_chain directory is mismatched, and it is as
+  # far as the 'topo' is concerned, but this script doesn't read the 'topo' from
+  # the lang directory.
+  utils/mkgraph.sh --self-loop-scale 1.0 data/lang_s_test_tgpr $dir $dir/graph
+fi
+
+if [ $stage -le 20 ]; then
+  for x in dev_s dev_t_16khz; do
+    nspk=$(wc -l <data/$x/spk2utt)
+    [ "$nspk" -gt "$decode_nj" ] && nspk=$decode_nj
+    steps/nnet3/decode.sh --nj $nspk --cmd "$decode_cmd" \
+      --acwt 1.0 --post-decode-acwt 10.0 \
+      --online-ivector-dir exp/nnet3${nnet3_affix}/ivectors_${x}_hires \
+      --scoring-opts "--min-lmwt 5 " \
+      $dir/graph data/${x}_hires $dir/decode_${x} || exit 1;
+    steps/lmrescore_const_arpa.sh --cmd "$decode_cmd" data/lang_s_test_{tgpr,fgconst} \
+      data/${x}_hires ${dir}/decode_${x} ${dir}/decode_${x}_rescore || exit
+  done
+fi
 
 echo "chain training and decoding finished..."
 exit 0

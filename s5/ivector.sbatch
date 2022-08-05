@@ -10,7 +10,7 @@
 #SBATCH --qos=long
 
 # The default run (wall-clock) time is 1 minute
-#SBATCH --time=168:00:00
+#SBATCH --time=144:00:00
 
 # The default number of parallel tasks per job is 1
 #SBATCH --ntasks=1
@@ -42,9 +42,9 @@ module use /opt/insy/modulefiles
 module load cuda/11.2 cudnn/11.2-8.1.1.33 devtoolset/8 intel/oneapi nccl/11.0-2.9.8
 
 # Computations should be started with 'srun'. For example:
-srun sh ./run_tdnn_1a_updated.sh
+srun sh ./local/nnet3/run_ivector_common.sh --stage 0 --nj 1 --min-seg-len 1.55 --train-set train --gmm tri4 --num-threads-ubm 32 --nnet3-affix ""
 
-#srun sh ./run_tdnn_lstm_1a.sh
+srun sh ./run_tdnn_1a_updated.sh
 
 # Your job commands go above here
 

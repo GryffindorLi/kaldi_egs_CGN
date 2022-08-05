@@ -14,12 +14,12 @@ nj=30
 min_seg_len=1.55  # min length in seconds... we do this because chain training
                   # will discard segments shorter than 1.5 seconds.   Must remain in sync
                   # with the same option given to prepare_lores_feats_and_alignments.sh
-train_set=train_cleaned   # you might set this to e.g. train.
+train_set=train   # you might set this to e.g. train.
 gmm=tri4          # This specifies a GMM-dir from the features of the type you're training the system on;
                          # it should contain alignments for 'train_set'.
 
 num_threads_ubm=32
-nnet3_affix=_cleaned     # affix for exp/nnet3 directory to put iVector stuff in, so it
+nnet3_affix=     # affix for exp/nnet3 directory to put iVector stuff in, so it
                          # becomes exp/nnet3_cleaned or whatever.
 
 . ./cmd.sh

@@ -34,7 +34,7 @@ nnet3_affix=  # cleanup affix for nnet3 and chain dirs, e.g. _cleaned
 train_stage=-10
 tree_affix=  # affix for tree directory, e.g. "a" or "b", in case we change the configuration.
 tdnn_affix=1a  #affix for TDNN directory, e.g. "a" or "b", in case we change the configuration.
-common_egs_dir=/tudelft.net/staff-bulk/ewi/insy/SpeechLab/siyuanfeng/software/kaldi/egs/cgn/s5/exp/chain/tdnn1a_sp_bi/egs  # you can set this to use previously dumped egs.
+common_egs_dir=  # you can set this to use previously dumped egs.
 
 
 # some settings dependent on the GPU, for a single GTX980Ti these settings seem to work ok.
@@ -51,7 +51,7 @@ frames_per_iter=1500000
 # End configuration section.
 echo "$0 $@"  # Print the command line for logging
 
-. cmd.sh
+. ./cmd.sh
 . ./path.sh
 . ./utils/parse_options.sh
 
@@ -64,13 +64,13 @@ where "nvcc" is installed.
 EOF
 fi
 
-# local/nnet3/run_ivector_common.sh --stage $stage \
-#                                   --nj $nj \
-#                                   --min-seg-len $min_seg_len \
-#                                   --train-set $train_set \
-#                                   --gmm $gmm \
-#                                   --num-threads-ubm $num_threads_ubm \
-#                                   --nnet3-affix "$nnet3_affix"
+#. local/nnet3/run_ivector_common.sh --stage $stage \
+#                                  --nj $nj \
+#                                  --min-seg-len $min_seg_len \
+#                                  --train-set $train_set \
+#                                  --gmm $gmm \
+#                                  --num-threads-ubm $num_threads_ubm \
+#                                  --nnet3-affix "$nnet3_affix"
 
 
 gmm_dir=exp/$train_set/$gmm

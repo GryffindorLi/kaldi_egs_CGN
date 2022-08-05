@@ -36,7 +36,7 @@ nnet3_affix=  # cleanup affix for nnet3 and chain dirs, e.g. _cleaned
 train_stage=-10
 tree_affix=  # affix for tree directory, e.g. "a" or "b", in case we change the configuration.
 tdnn_lstm_affix=1a  #affix for TDNN directory, e.g. "a" or "b", in case we change the configuration.
-common_egs_dir=/tudelft.net/staff-bulk/ewi/insy/SpeechLab/siyuanfeng/software/kaldi/egs/cgn/s5/exp/chain/tdnn_lstm1a_sp_bi_epoch3_ld5/egs  # you can set this to use previously dumped egs.
+common_egs_dir=  # you can set this to use previously dumped egs.
 
 chunk_width=150
 chunk_left_context=40
@@ -63,7 +63,7 @@ frames_per_iter=1500000
 # End configuration section.
 echo "$0 $@"  # Print the command line for logging
 
-. cmd.sh
+. ./cmd.sh
 . ./path.sh
 . ./utils/parse_options.sh
 
