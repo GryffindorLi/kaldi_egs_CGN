@@ -13,7 +13,7 @@
 # using more material for the language model and by extending your lexicon.
 #
 
-stage=9# note that stage 7 is incomplete due to code bug in tri3_cleaned_work
+stage=0 #note that stage 7 is incomplete due to code bug in tri3_cleaned_work
 train=true	# set to false to disable the training-related scripts
 				# note: you probably only want to set --train false if you
 				# are using at least --stage 1.
