@@ -7,10 +7,10 @@
 #SBATCH --partition=general
 
 # The default Quality of Service is the 'short' QoS (maximum run time: 4 hours)
-#SBATCH --qos=medium
+#SBATCH --qos=long
 
 # The default run (wall-clock) time is 1 minute
-#SBATCH --time=36:00:00
+#SBATCH --time=96:00:00
 
 # The default number of parallel tasks per job is 1
 #SBATCH --ntasks=1
@@ -23,7 +23,7 @@
 #SBATCH --mem=40G
 
 # Request a GPU
-#SBATCH --gres=gpu:3
+#SBATCH --gres=gpu:1
 
 # Set mail type to 'END' to receive a mail when the job finishes
 # Do not enable mails when submitting large numbers (>20) of jobs at once
@@ -43,11 +43,11 @@ module load cuda/11.2 cudnn/11.2-8.1.1.33 devtoolset/8 intel/oneapi nccl/11.0-2.
 
 # Computations should be started with 'srun'. For example:
 
-#srun sh ./run.sh
+srun bash ./run.sh
 
-srun sh ./local/nnet3/run_ivector_common.sh --stage 0 --nj 1 --min-seg-len 1.55 --train-set train --gmm tri4 --num-threads-ubm 32 --nnet3-affix ""
+#srun bash ./local/nnet3/run_ivector_common.sh --stage 3 --nj 1 --min-seg-len 1.55 --train-set train --gmm tri4 --num-threads-ubm 32 --nnet3-affix ""
 
-#srun sh ./run_tdnn_1a_updated.sh
+#srun bash ./run_tdnn_1a_updated.sh
 
 # Your job commands go above here
 
