@@ -275,6 +275,6 @@ if [ $stage -le 10 ]; then
     data/train data/lang_s exp/train/tri4 exp/train/tri4_ali || exit 1 
 fi
  # To train nnet models, please run local/chain/run_tdnn.sh
-. local/chain/run_tdnn.sh 
+ 
 # exit 0;
 echo "succeeded"
