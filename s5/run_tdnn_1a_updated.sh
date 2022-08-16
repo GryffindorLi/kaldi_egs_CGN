@@ -1,1 +1,0 @@
-local/chain/tuning/run_tdnn_1a_updated.sh

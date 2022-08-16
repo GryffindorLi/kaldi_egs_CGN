@@ -43,11 +43,11 @@ module load cuda/11.2 cudnn/11.2-8.1.1.33 devtoolset/8 intel/oneapi nccl/11.0-2.
 
 # Computations should be started with 'srun'. For example:
 
-srun bash ./run.sh --stage 8
+#srun bash ./run.sh --stage 8
 
-srun bash ./local/nnet3/run_ivector_common.sh --stage 0 --nj 1 --min-seg-len 1.55 --train-set train --gmm tri4 --num-threads-ubm 32 --nnet3-affix ""
+#srun bash ./local/nnet3/run_ivector_common.sh --stage 0 --nj 1 --min-seg-len 1.55 --train-set train --gmm tri4 --num-threads-ubm 32 --nnet3-affix ""
 
-#srun bash ./run_tdnn_1a_updated.sh
+srun bash ./run_tdnn_lstm_1a.sh --stage 17
 
 # Your job commands go above here
 

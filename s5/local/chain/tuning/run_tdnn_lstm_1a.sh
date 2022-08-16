@@ -18,7 +18,7 @@
 
 # repurposed from egs/Tedlium for CGN by LvdW
 remove_egs=false
-stage=18
+stage=17
 align_fmllr_lats_stage=-10
 nj=1
 decode_nj=1
@@ -89,8 +89,8 @@ gmm_dir=exp/$train_set/$gmm
 ali_dir=exp/$train_set/${gmm}_ali_${train_set}_sp_comb
 tree_dir=exp/chain${nnet3_affix}/tree_bi${tree_affix}
 lat_dir=exp/chain${nnet3_affix}/${gmm}_${train_set}_sp_comb_lats
-#dir=exp/chain${nnet3_affix}/tdnn${tdnn_lstm_affix}_sp_bi
-dir=exp/chain${nnet3_affix}/tdnn_lstm${tdnn_lstm_affix}_sp_bi_epoch${num_epochs}
+dir=exp/chain${nnet3_affix}/tdnn${tdnn_lstm_affix}_sp_bi
+#dir=exp/chain${nnet3_affix}/tdnn_lstm${tdnn_lstm_affix}_sp_bi_epoch${num_epochs}
 if [ $label_delay -gt 0 ]; then dir=${dir}_ld${label_delay}; fi
 
 train_data_dir=data/${train_set}_sp_hires_comb
